@@ -1,3 +1,5 @@
+import logging
+
 from email_validator import EmailNotValidError, validate_email
 from flask import (
     Flask,
@@ -9,9 +11,18 @@ from flask import (
     request,
     url_for,
 )
+from flask_debugtoolbar import DebugToolbarExtension
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "hogefugapiyo"
+app.logger.setLevel(logging.DEBUG)
+app.config["DEBUG_TB_INTERCEPT_REDIRECTS"] = False
+toolbar = DebugToolbarExtension(app)
+app.logger.critical("fatal error")
+app.logger.critical("error")
+app.logger.critical("warning")
+app.logger.critical("info")
+app.logger.critical("debug")
 
 
 @app.route("/hello/<name>")
