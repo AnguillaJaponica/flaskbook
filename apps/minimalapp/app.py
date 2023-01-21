@@ -1,4 +1,5 @@
 import logging
+import os
 
 from email_validator import EmailNotValidError, validate_email
 from flask import (
@@ -12,6 +13,7 @@ from flask import (
     url_for,
 )
 from flask_debugtoolbar import DebugToolbarExtension
+from flask_mail import Mail, Message
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "hogefugapiyo"
@@ -23,6 +25,14 @@ app.logger.critical("error")
 app.logger.critical("warning")
 app.logger.critical("info")
 app.logger.critical("debug")
+
+app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER")
+app.config["MAIL_PORT"] = os.environ.get("MAIL_PORT")
+app.config["MAIL_USE_TLS"] = os.environ.get("MAIL_USE_TLS")
+app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
+app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_DEFAULT_SENDER")
+mail = Mail(app)
 
 
 @app.route("/hello/<name>")
@@ -67,11 +77,19 @@ def contact_complete():
             return redirect(url_for("contact"))
 
         # メールを送る
+        send_email(email, "問合せありがとうございます", "contact_mail", username=username, description=description)
         # contactエンドポイントにリダイレクト
         flash("問い合わせ内容はメールにて送信しました。ありがとうございます。")
         return redirect(url_for("contact_complete"))
 
     return render_template("contact_complete.html")
+
+
+def send_email(to, subject, template, **kwargs):
+    message = Message(subject, recipients=[to])
+    message.body = render_template(f"{template}.txt", **kwargs)
+    message.html = render_template(f"{template}.html", **kwargs)
+    mail.send
 
 
 with app.test_request_context():
